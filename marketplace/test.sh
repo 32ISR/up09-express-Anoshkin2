@@ -1,0 +1,1 @@
+curl --request "POST" -D '{"title": "123", "description": "asd", "price": "1000"}' --header "Content-Type: application/json" http://localhost:3000/api/items 
