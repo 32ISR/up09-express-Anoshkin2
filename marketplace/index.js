@@ -34,7 +34,29 @@ app.get("/", (req, res) => {
 })
 
 app.post("/auth/signin", (req, res) => {
+    try {
+        const { username, password } = req.body
+        if (!username || !password) {
+            return res.status(400).json({ error: "Missing data" })
+        }
 
+        const user = db.prepare(
+            "SELECT * FROM users WHERE username = ?"
+        ).get(username)
+        if (!user) {
+            return res.status(400).json({ error: "Пользователя нету" })
+        }
+
+        const valid = bcr.compareSync(password, user.password)
+        if (!valid) return res.status(400).json({ error: "Пароль невереный" })
+
+        const { password: _, ...safeUser } = user
+        const token = jwt.sign({ ...safeUser }, SECRET, { expiresIn: "24h" })
+        res.status(200).json({ success: true, token, user: safeUser })
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({ error: "Something wrong" })
+    }
 })
 app.post("/auth/signup", (req, res) => {
     try {
@@ -132,4 +154,16 @@ app.post("/api/items", auth, (req, res) => {
     }
 })
 
+app.delete("/api/items/:id", auth, (req, res) =>{
+    try {
+            const {id} = req.params
+            const items1 = prepare("SELECT * FROM items WHERE id = ?")
+            .get(id)
+    } catch (error){
+        console.error(error)
+        res.status(500).json({error: "Something went wrong" })
+    }
+})
+
 app.listen(PORT)
+
